@@ -1,0 +1,56 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: card-subscription-service
+
+  # ── Datasource (H2 for local, override for prod) ─────────────────────────────
+  datasource:
+    url: jdbc:h2:mem:cardsubdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  # ── Kafka ─────────────────────────────────────────────────────────────────────
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: card-subscription-consumer-group
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+# ── Application-specific Kafka topics ─────────────────────────────────────────
+kafka:
+  topics:
+    card-events: card.events
+
+# ── External card API ──────────────────────────────────────────────────────────
+external:
+  card-api:
+    base-url: http://localhost:8081
+    subscribe-path: /api/v1/subscribe-new-card
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+logging:
+  level:
+    com.demo.cardsubscription: DEBUG
+    org.springframework.kafka: INFO
+    org.springframework.web: INFO

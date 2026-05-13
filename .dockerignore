@@ -1,0 +1,13 @@
+**/.git
+**/.idea
+**/.vscode
+**/*.iml
+**/target
+**/__pycache__
+**/node_modules
+**/logs
+**/*.log
+**/docker-compose*.yml
+**/Dockerfile
+README.md
+.dockerignore
