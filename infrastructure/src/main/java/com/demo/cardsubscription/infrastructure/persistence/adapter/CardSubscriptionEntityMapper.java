@@ -13,7 +13,6 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface CardSubscriptionEntityMapper {
 
-    @Mapping(target = "status", expression = "java(entity.getStatus())")
     CardSubscription toDomain(CardSubscriptionEntity entity);
 
     @Mapping(target = "status", expression = "java(domain.getStatus().name())")
