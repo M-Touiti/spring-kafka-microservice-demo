@@ -3,7 +3,7 @@
 # Full Maven + JDK image. Compiles and packages all modules.
 # POMs are copied before sources to cache the dependency download layer.
 # =============================================================================
-FROM maven:3.9.6-eclipse-temurin-17 AS builder
+FROM maven:3.9.6-eclipse-temurin-21 AS builder
 
 WORKDIR /build
 
@@ -32,7 +32,7 @@ RUN mvn clean package -DskipTests -B --no-transfer-progress
 # code-only change only invalidates the thin "application" layer (~a few KB),
 # not the 100 MB+ of dependencies.
 # =============================================================================
-FROM eclipse-temurin:17-jre AS extractor
+FROM eclipse-temurin:21-jre AS extractor
 
 WORKDIR /extract
 COPY --from=builder /build/exposition/target/exposition-*.jar app.jar
@@ -43,7 +43,7 @@ RUN java -Djarmode=layertools -jar app.jar extract
 # Minimal JRE. Each COPY is a distinct Docker layer ordered least → most
 # volatile, so only the "application" layer is pushed on normal code changes.
 # =============================================================================
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:21-jre
 
 LABEL maintainer="card-subscription-team"
 LABEL org.opencontainers.image.title="card-subscription-service"

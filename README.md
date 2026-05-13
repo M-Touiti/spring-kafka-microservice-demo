@@ -160,9 +160,9 @@ The `Dockerfile` uses a **3-stage build**:
 
 | Stage       | Base image                        | Purpose                                               |
 |-------------|-----------------------------------|-------------------------------------------------------|
-| `builder`   | `maven:3.9.6-eclipse-temurin-17`  | Compiles all modules, produces the fat jar            |
-| `extractor` | `eclipse-temurin:17-jre`          | Splits the fat jar into 4 Spring Boot layers          |
-| _(runtime)_ | `eclipse-temurin:17-jre`          | Copies layers in order; runs as non-root `appuser`    |
+| `builder`   | `maven:3.9.6-eclipse-temurin-21`  | Compiles all modules, produces the fat jar            |
+| `extractor` | `eclipse-temurin:21-jre`          | Splits the fat jar into 4 Spring Boot layers          |
+| _(runtime)_ | `eclipse-temurin:21-jre`          | Copies layers in order; runs as non-root `appuser`    |
 
 The layered JAR means a code-only change rebuilds only the thin **application** layer (~a few KB), leaving the 100 MB+ of dependencies untouched in the Docker cache.
 
@@ -308,7 +308,7 @@ mvn test -pl exposition -Dtest="**/unit/**"
 
 | Layer       | Technology                                  |
 |-------------|---------------------------------------------|
-| Language    | Java 17                                     |
+| Language    | Java 21                                     |
 | Framework   | Spring Boot 3.2.5                           |
 | Messaging   | Spring Kafka 3.x, `DefaultErrorHandler`, DLT |
 | Persistence | Spring Data JPA, H2 (dev), PostgreSQL (prod) |
