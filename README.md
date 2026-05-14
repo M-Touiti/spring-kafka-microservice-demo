@@ -123,26 +123,36 @@ card-subscription/
 - Maven 3.9+
 - Docker & Docker Compose
 
-### 1. Start local infrastructure
+### 1. Run the full stack with Docker Compose
 
 ```bash
 docker compose -f docker/docker-compose.yml up -d
 ```
 
-This starts:
-- **Kafka** on `localhost:9092`
-- **Zookeeper** on `localhost:2181`
-- **Kafka UI** on [http://localhost:8090](http://localhost:8090)
+This starts all services:
 
-### 2. Build the project
+| Service     | Port  | Notes                                      |
+|-------------|-------|--------------------------------------------|
+| Zookeeper   | 2181  |                                            |
+| Kafka       | 9092  | Internal broker address: `kafka:29092`     |
+| Kafka UI    | 8090  | [http://localhost:8090](http://localhost:8090) |
+| PostgreSQL  | 5432  | DB: `cardsubdb`, user: `carduser`          |
+| App         | 8080  | Waits for Kafka and Postgres to be healthy |
+
+The app is built from the `Dockerfile` at the repo root (3-stage layered build — see below). Postgres data is persisted in the `postgres-data` Docker volume.
+
+### 2. Run locally (without Docker app container)
+
+Start only the infrastructure:
+
+```bash
+docker compose -f docker/docker-compose.yml up -d zookeeper kafka kafka-ui postgres
+```
+
+Then build and run the application:
 
 ```bash
 mvn clean package -DskipTests
-```
-
-### 3. Run the application
-
-```bash
 java -jar exposition/target/exposition-*.jar
 ```
 
@@ -152,11 +162,20 @@ Or with Maven:
 mvn spring-boot:run -pl exposition
 ```
 
+The local profile uses **H2 in-memory** by default (`application.yml`). To point it at the Compose Postgres instead:
+
+```bash
+java -jar exposition/target/exposition-*.jar \
+  --spring.datasource.url=jdbc:postgresql://localhost:5432/cardsubdb \
+  --spring.datasource.username=carduser \
+  --spring.datasource.password=cardpass \
+  --spring.datasource.driver-class-name=org.postgresql.Driver \
+  --spring.jpa.hibernate.ddl-auto=update
+```
+
 The application starts on **http://localhost:8080**.
 
-### 4. Run with Docker
-
-The `Dockerfile` uses a **3-stage build**:
+### Dockerfile — 3-stage build
 
 | Stage       | Base image                        | Purpose                                               |
 |-------------|-----------------------------------|-------------------------------------------------------|
@@ -165,17 +184,6 @@ The `Dockerfile` uses a **3-stage build**:
 | _(runtime)_ | `eclipse-temurin:21-jre`          | Copies layers in order; runs as non-root `appuser`    |
 
 The layered JAR means a code-only change rebuilds only the thin **application** layer (~a few KB), leaving the 100 MB+ of dependencies untouched in the Docker cache.
-
-```bash
-# Build the image
-docker build -t card-subscription-service:latest .
-
-# Run (requires Kafka accessible from the container)
-docker run -p 8080:8080 \
-  -e SPRING_KAFKA_BOOTSTRAP_SERVERS=host.docker.internal:9092 \
-  -e EXTERNAL_CARD_API_BASE_URL=http://host.docker.internal:8081 \
-  card-subscription-service:latest
-```
 
 ---
 
